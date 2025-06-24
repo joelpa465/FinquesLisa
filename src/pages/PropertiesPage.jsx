@@ -1,492 +1,501 @@
 import { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useProperties } from '../context/PropertiesContext';
 import { 
   Search, 
   Filter, 
+  Grid3X3, 
+  List, 
   MapPin, 
+  Bed, 
+  Bath, 
+  Square, 
+  Heart,
   SlidersHorizontal,
-  Grid3X3,
-  List,
-  ArrowUpDown
+  X
 } from 'lucide-react';
 
-// Components
-import PropertyCard from '../components/PropertyCard';
+// Componente de tarjeta de propiedad
+const PropertyCard = ({ property, viewMode }) => {
+  const [isLiked, setIsLiked] = useState(false);
 
-// PROPIEDADES REALES DE FINQUES LISA
-const mockProperties = [
-  {
-    id: 1,
-    title: "Magnífico ático dúplex con terraza-jardín en Sagrada Familia",
-    price: 810000,
-    originalPrice: 825000,
-    image: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=600&h=400&fit=crop",
-    location: "Sagrada Família, Barcelona",
-    bedrooms: 3,
-    bathrooms: 2,
-    area: 99,
-    yearBuilt: 2000,
-    isFeatured: true,
-    operationType: "venta",
-    propertyType: "duplex",
-    reference: "FL001",
-    isReduced: true
-  },
-  {
-    id: 2,
-    title: "Exclusiva vivienda reformada junto a Paseo San Juan",
-    price: 760000,
-    image: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600&h=400&fit=crop",
-    location: "Camp d'en Grassot, Barcelona",
-    bedrooms: 2,
-    bathrooms: 2,
-    area: 133,
-    yearBuilt: 1941,
-    isFeatured: true,
-    operationType: "venta",
-    propertyType: "piso",
-    reference: "FL002",
-    isOpportunity: true
-  },
-  {
-    id: 3,
-    title: "Fantástico piso con espacio, confort y mar en Badalona",
-    price: 498000,
-    image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&h=400&fit=crop",
-    location: "Port, Badalona",
-    bedrooms: 3,
-    bathrooms: 2,
-    area: 93,
-    yearBuilt: 1995,
-    isFeatured: false,
-    operationType: "venta",
-    propertyType: "piso",
-    reference: "FL003",
-    isOpportunity: true
-  },
-  {
-    id: 4,
-    title: "Amplio piso en Gràcia Nova - Camp d'en Grassot",
-    price: 402000,
-    image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600&h=400&fit=crop",
-    location: "Baix Guinardó, Barcelona",
-    bedrooms: 3,
-    bathrooms: 2,
-    area: 103,
-    yearBuilt: 1960,
-    isFeatured: false,
-    operationType: "venta",
-    propertyType: "piso",
-    reference: "FL004",
-    isOpportunity: true
-  },
-  {
-    id: 5,
-    title: "Tu nuevo hogar en el corazón de Nou Barris",
-    price: 235000,
-    originalPrice: 245000,
-    image: "https://images.unsplash.com/photo-1554995207-c18c203602cb?w=600&h=400&fit=crop",
-    location: "Porta, Barcelona",
-    bedrooms: 3,
-    bathrooms: 1,
-    area: 64,
-    yearBuilt: 1970,
-    isFeatured: false,
-    operationType: "venta",
-    propertyType: "piso",
-    reference: "FL005",
-    isReduced: true
-  },
-  {
-    id: 6,
-    title: "Espectacular dúplex en Sants Montjuïc",
-    price: 280000,
-    originalPrice: 285000,
-    image: "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=600&h=400&fit=crop",
-    location: "Marina del Port, Barcelona",
-    bedrooms: 3,
-    bathrooms: 2,
-    area: 100,
-    yearBuilt: 1985,
-    isFeatured: false,
-    operationType: "venta",
-    propertyType: "duplex",
-    reference: "FL006",
-    isReduced: true
-  }
-];
+  useEffect(() => {
+    const favorites = JSON.parse(localStorage.getItem('finques_lisa_favorites') || '[]');
+    setIsLiked(favorites.includes(property.id));
+  }, [property.id]);
+
+  const handleToggleFavorite = () => {
+    const favorites = JSON.parse(localStorage.getItem('finques_lisa_favorites') || '[]');
+    
+    if (isLiked) {
+      const newFavorites = favorites.filter(id => id !== property.id);
+      localStorage.setItem('finques_lisa_favorites', JSON.stringify(newFavorites));
+      setIsLiked(false);
+    } else {
+      const newFavorites = [...favorites, property.id];
+      localStorage.setItem('finques_lisa_favorites', JSON.stringify(newFavorites));
+      setIsLiked(true);
+    }
+  };
+
+  const cardClass = viewMode === 'grid' 
+    ? "bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
+    : "bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow flex";
+
+  const imageClass = viewMode === 'grid'
+    ? "w-full h-48 object-cover"
+    : "w-64 h-48 object-cover";
+
+  const contentClass = viewMode === 'grid'
+    ? "p-4"
+    : "flex-1 p-4";
+
+  return (
+    <div className={cardClass}>
+      <div className="relative">
+        <img
+          src={property.main_image || property.image || "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop"}
+          alt={property.title}
+          className={imageClass}
+        />
+        <button
+          onClick={handleToggleFavorite}
+          className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md hover:bg-gray-50 transition-colors"
+        >
+          <Heart 
+            className={`w-4 h-4 ${isLiked ? 'text-red-500 fill-red-500' : 'text-gray-400'}`}
+          />
+        </button>
+        <div className="absolute top-2 left-2">
+          <span className={`px-2 py-1 text-xs font-semibold rounded-full text-white ${
+            property.operation_type === 'alquiler' ? 'bg-blue-600' : 'bg-purple-600'
+          }`}>
+            {property.operation_type === 'alquiler' ? 'Alquiler' : 'Venta'}
+          </span>
+        </div>
+      </div>
+      
+      <div className={contentClass}>
+        <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
+          {property.title}
+        </h3>
+        
+        <div className="flex items-center text-gray-600 text-sm mb-2">
+          <MapPin className="w-4 h-4 mr-1" />
+          {property.location}
+        </div>
+        
+        <div className="flex items-center justify-between text-sm text-gray-600 mb-3">
+          <div className="flex space-x-3">
+            {property.bedrooms > 0 && (
+              <span className="flex items-center">
+                <Bed className="w-4 h-4 mr-1" />
+                {property.bedrooms}
+              </span>
+            )}
+            {property.bathrooms > 0 && (
+              <span className="flex items-center">
+                <Bath className="w-4 h-4 mr-1" />
+                {property.bathrooms}
+              </span>
+            )}
+            {property.area_built > 0 && (
+              <span className="flex items-center">
+                <Square className="w-4 h-4 mr-1" />
+                {property.area_built}m²
+              </span>
+            )}
+          </div>
+        </div>
+        
+        <div className="flex items-center justify-between">
+          <div>
+            <span className="text-lg font-bold text-gray-900">
+              €{typeof property.price === 'number' ? property.price.toLocaleString() : property.price}
+            </span>
+            {property.operation_type === 'alquiler' && (
+              <span className="text-gray-500 text-sm ml-1">/mes</span>
+            )}
+          </div>
+          <Link
+            to={`/propiedades/${property.slug || property.id}`}
+            className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg text-sm transition-colors"
+          >
+            Ver detalles
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const PropertiesPage = () => {
-  const [properties, setProperties] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { 
+    properties, 
+    isLoading, 
+    loadProperties, 
+    propertyTypes, 
+    locations, 
+    priceRanges,
+    searchProperties
+  } = useProperties();
+  
   const [viewMode, setViewMode] = useState('grid');
   const [showFilters, setShowFilters] = useState(false);
   
   // Filtros
   const [filters, setFilters] = useState({
     search: '',
-    operationType: 'all',
-    propertyType: 'all',
-    minPrice: '',
-    maxPrice: '',
+    operation_type: 'all',
+    property_type: 'all',
+    min_price: '',
+    max_price: '',
     bedrooms: 'all',
-    location: 'all',
-    reference: ''
+    location: 'all'
   });
   
   const [sortBy, setSortBy] = useState('newest');
 
-  // Simular carga de datos
+  // Cargar propiedades al montar el componente
   useEffect(() => {
-    const loadProperties = async () => {
-      setLoading(true);
-      // Simular delay de API
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setProperties(mockProperties);
-      setLoading(false);
-    };
-
     loadProperties();
   }, []);
 
-  // Filtrar y ordenar propiedades
+  // Función para aplicar filtros
+  const applyFilters = async () => {
+    const filterParams = {};
+    
+    if (filters.operation_type !== 'all') {
+      filterParams.operation_type = filters.operation_type;
+    }
+    
+    if (filters.property_type !== 'all') {
+      filterParams.property_type = filters.property_type;
+    }
+    
+    if (filters.min_price) {
+      filterParams.min_price = parseInt(filters.min_price);
+    }
+    
+    if (filters.max_price) {
+      filterParams.max_price = parseInt(filters.max_price);
+    }
+    
+    if (filters.bedrooms !== 'all') {
+      filterParams.bedrooms = parseInt(filters.bedrooms);
+    }
+    
+    if (filters.location !== 'all') {
+      filterParams.location = filters.location;
+    }
+
+    if (filters.search) {
+      await searchProperties(filters.search, filterParams);
+    } else {
+      await loadProperties(filterParams);
+    }
+  };
+
+  // Aplicar filtros cuando cambien
+  useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      applyFilters();
+    }, 500);
+
+    return () => clearTimeout(debounceTimer);
+  }, [filters]);
+
+  // Filtrar y ordenar propiedades en el frontend
   const filteredAndSortedProperties = useMemo(() => {
-    let filtered = properties.filter(property => {
-      // Búsqueda por título o ubicación
-      if (filters.search) {
-        const searchLower = filters.search.toLowerCase();
-        const matchesTitle = property.title.toLowerCase().includes(searchLower);
-        const matchesLocation = property.location.toLowerCase().includes(searchLower);
-        if (!matchesTitle && !matchesLocation) return false;
-      }
-
-      // Filtro por referencia
-      if (filters.reference) {
-        const referenceLower = filters.reference.toLowerCase();
-        if (!property.reference?.toLowerCase().includes(referenceLower)) {
-          return false;
-        }
-      }
-
-      // Filtro por tipo de operación
-      if (filters.operationType !== 'all' && property.operationType !== filters.operationType) {
-        return false;
-      }
-
-      // Filtro por tipo de propiedad
-      if (filters.propertyType !== 'all' && property.propertyType !== filters.propertyType) {
-        return false;
-      }
-
-      // Filtro por precio
-      if (filters.minPrice && property.price < parseInt(filters.minPrice)) {
-        return false;
-      }
-      if (filters.maxPrice && property.price > parseInt(filters.maxPrice)) {
-        return false;
-      }
-
-      // Filtro por habitaciones
-      if (filters.bedrooms !== 'all' && property.bedrooms !== parseInt(filters.bedrooms)) {
-        return false;
-      }
-
-      return true;
-    });
+    let filtered = [...properties];
 
     // Ordenar
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case 'price-asc':
-          return a.price - b.price;
-        case 'price-desc':
-          return b.price - a.price;
-        case 'area-desc':
-          return b.area - a.area;
-        case 'year-desc':
-          return b.yearBuilt - a.yearBuilt;
-        default: // newest
-          return b.id - a.id;
-      }
-    });
+    switch (sortBy) {
+      case 'price_asc':
+        filtered.sort((a, b) => a.price - b.price);
+        break;
+      case 'price_desc':
+        filtered.sort((a, b) => b.price - a.price);
+        break;
+      case 'area_desc':
+        filtered.sort((a, b) => (b.area_built || 0) - (a.area_built || 0));
+        break;
+      case 'newest':
+      default:
+        filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        break;
+    }
 
     return filtered;
-  }, [properties, filters, sortBy]);
+  }, [properties, sortBy]);
 
   const handleFilterChange = (key, value) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+    setFilters(prev => ({
+      ...prev,
+      [key]: value
+    }));
   };
 
-  const resetFilters = () => {
+  const clearFilters = () => {
     setFilters({
       search: '',
-      operationType: 'all',
-      propertyType: 'all',
-      minPrice: '',
-      maxPrice: '',
+      operation_type: 'all',
+      property_type: 'all',
+      min_price: '',
+      max_price: '',
       bedrooms: 'all',
-      location: 'all',
-      reference: ''
+      location: 'all'
     });
   };
 
-  const locations = [...new Set(properties.map(p => p.location))];
-  const propertyTypes = [...new Set(properties.map(p => p.propertyType))];
+  const currentPriceRange = priceRanges[filters.operation_type] || { min: 0, max: 1000000 };
 
   return (
     <>
       <Helmet>
         <title>Propiedades en Venta y Alquiler - Finques Lisa</title>
-        <meta name="description" content="Encuentra tu propiedad ideal en Lleida. Pisos, casas, locales y chalets en venta y alquiler. Más de 500 propiedades disponibles." />
-        <meta name="keywords" content="propiedades Lleida, pisos venta Lleida, casas alquiler Lleida, inmobiliaria" />
+        <meta name="description" content="Explora nuestra amplia selección de propiedades en venta y alquiler en Lleida. Encuentra tu hogar ideal con Finques Lisa." />
+        <meta name="keywords" content="propiedades, venta, alquiler, Lleida, pisos, casas, inmobiliaria" />
       </Helmet>
 
       <div className="min-h-screen bg-gray-50">
-        {/* Header Section */}
+        {/* Header */}
         <section className="bg-white border-b border-gray-200">
           <div className="container-custom py-8">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-              <div>
-                <h1 className="text-3xl font-serif font-bold text-gray-900 mb-2">
-                  Propiedades disponibles
-                </h1>
-                <p className="text-gray-600">
-                  {loading ? 'Cargando...' : `${filteredAndSortedProperties.length} propiedades encontradas`}
-                </p>
-              </div>
-
-              {/* Search Bar */}
-              <div className="flex-1 max-w-md">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    type="text"
-                    placeholder="Buscar por ubicación o título..."
-                    value={filters.search}
-                    onChange={(e) => handleFilterChange('search', e.target.value)}
-                    className="input pl-10 pr-4"
-                  />
-                </div>
-              </div>
+            <div className="text-center">
+              <h1 className="text-4xl font-serif font-bold text-gray-900 mb-4">
+                Nuestras Propiedades
+              </h1>
+              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                Encuentra la propiedad perfecta entre nuestra selección de inmuebles en Lleida
+              </p>
             </div>
           </div>
         </section>
 
         <div className="container-custom py-8">
-          <div className="flex flex-col lg:flex-row gap-8">
-            {/* Sidebar Filters */}
-            <div className="lg:w-80">
-              <div className="sticky top-24">
-                <div className="bg-white rounded-xl shadow-soft p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-semibold text-gray-900">Filtros</h3>
-                    <button
-                      onClick={resetFilters}
-                      className="text-sm text-primary-600 hover:text-primary-700"
-                    >
-                      Limpiar
-                    </button>
-                  </div>
-
-                  <div className="space-y-6">
-                    {/* Filtro por referencia */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Referencia
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="Ej: FL001"
-                        value={filters.reference}
-                        onChange={(e) => handleFilterChange('reference', e.target.value)}
-                        className="input"
-                      />
-                    </div>
-
-                    {/* Tipo de operación */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Operación
-                      </label>
-                      <select
-                        value={filters.operationType}
-                        onChange={(e) => handleFilterChange('operationType', e.target.value)}
-                        className="input"
-                      >
-                        <option value="all">Todas</option>
-                        <option value="venta">Venta</option>
-                        <option value="alquiler">Alquiler</option>
-                      </select>
-                    </div>
-
-                    {/* Tipo de propiedad */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Tipo de propiedad
-                      </label>
-                      <select
-                        value={filters.propertyType}
-                        onChange={(e) => handleFilterChange('propertyType', e.target.value)}
-                        className="input"
-                      >
-                        <option value="all">Todos</option>
-                        {propertyTypes.map(type => (
-                          <option key={type} value={type}>
-                            {type.charAt(0).toUpperCase() + type.slice(1)}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Rango de precio */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Precio
-                      </label>
-                      <div className="grid grid-cols-2 gap-2">
-                        <input
-                          type="number"
-                          placeholder="Mín"
-                          value={filters.minPrice}
-                          onChange={(e) => handleFilterChange('minPrice', e.target.value)}
-                          className="input"
-                        />
-                        <input
-                          type="number"
-                          placeholder="Máx"
-                          value={filters.maxPrice}
-                          onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
-                          className="input"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Habitaciones */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Habitaciones
-                      </label>
-                      <select
-                        value={filters.bedrooms}
-                        onChange={(e) => handleFilterChange('bedrooms', e.target.value)}
-                        className="input"
-                      >
-                        <option value="all">Todas</option>
-                        <option value="1">1 hab.</option>
-                        <option value="2">2 hab.</option>
-                        <option value="3">3 hab.</option>
-                        <option value="4">4+ hab.</option>
-                      </select>
-                    </div>
-                  </div>
+          {/* Controles principales */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+            <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+              {/* Búsqueda */}
+              <div className="flex flex-col sm:flex-row gap-4 flex-1">
+                <div className="relative flex-1 max-w-md">
+                  <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Buscar por título, ubicación..."
+                    value={filters.search}
+                    onChange={(e) => handleFilterChange('search', e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  />
                 </div>
-              </div>
-            </div>
 
-            {/* Main Content */}
-            <div className="flex-1">
-              {/* Controls Bar */}
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-                <div className="flex items-center space-x-4">
+                <div className="flex gap-2">
                   <button
                     onClick={() => setShowFilters(!showFilters)}
-                    className="lg:hidden btn-outline"
+                    className={`flex items-center px-4 py-3 border rounded-lg transition-colors ${
+                      showFilters 
+                        ? 'border-primary-500 bg-primary-50 text-primary-700' 
+                        : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                    }`}
                   >
                     <SlidersHorizontal className="w-4 h-4 mr-2" />
                     Filtros
                   </button>
                 </div>
+              </div>
 
-                <div className="flex items-center space-x-4">
-                  {/* Sort */}
-                  <div className="flex items-center space-x-2">
-                    <ArrowUpDown className="w-4 h-4 text-gray-400" />
+              {/* Controles de vista */}
+              <div className="flex items-center gap-4">
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                >
+                  <option value="newest">Más recientes</option>
+                  <option value="price_asc">Precio: menor a mayor</option>
+                  <option value="price_desc">Precio: mayor a menor</option>
+                  <option value="area_desc">Mayor superficie</option>
+                </select>
+
+                <div className="flex border border-gray-300 rounded-lg overflow-hidden">
+                  <button
+                    onClick={() => setViewMode('grid')}
+                    className={`p-3 ${viewMode === 'grid' ? 'bg-primary-500 text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+                  >
+                    <Grid3X3 className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setViewMode('list')}
+                    className={`p-3 ${viewMode === 'list' ? 'bg-primary-500 text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+                  >
+                    <List className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Panel de filtros avanzados */}
+            {showFilters && (
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Tipo de operación
+                    </label>
                     <select
-                      value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value)}
-                      className="input min-w-[140px]"
+                      value={filters.operation_type}
+                      onChange={(e) => handleFilterChange('operation_type', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     >
-                      <option value="newest">Más reciente</option>
-                      <option value="price-asc">Precio: menor a mayor</option>
-                      <option value="price-desc">Precio: mayor a menor</option>
-                      <option value="area-desc">Mayor superficie</option>
-                      <option value="year-desc">Más nuevo</option>
+                      <option value="all">Todos</option>
+                      <option value="venta">Venta</option>
+                      <option value="alquiler">Alquiler</option>
                     </select>
                   </div>
 
-                  {/* View Mode */}
-                  <div className="flex border border-gray-200 rounded-lg overflow-hidden">
-                    <button
-                      onClick={() => setViewMode('grid')}
-                      className={`p-2 ${viewMode === 'grid' ? 'bg-primary-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Tipo de propiedad
+                    </label>
+                    <select
+                      value={filters.property_type}
+                      onChange={(e) => handleFilterChange('property_type', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     >
-                      <Grid3X3 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => setViewMode('list')}
-                      className={`p-2 ${viewMode === 'list' ? 'bg-primary-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                      <option value="all">Todos</option>
+                      {propertyTypes.map(type => (
+                        <option key={type} value={type}>
+                          {type.charAt(0).toUpperCase() + type.slice(1)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Habitaciones
+                    </label>
+                    <select
+                      value={filters.bedrooms}
+                      onChange={(e) => handleFilterChange('bedrooms', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     >
-                      <List className="w-4 h-4" />
+                      <option value="all">Cualquiera</option>
+                      <option value="1">1+</option>
+                      <option value="2">2+</option>
+                      <option value="3">3+</option>
+                      <option value="4">4+</option>
+                      <option value="5">5+</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Ubicación
+                    </label>
+                    <select
+                      value={filters.location}
+                      onChange={(e) => handleFilterChange('location', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    >
+                      <option value="all">Todas</option>
+                      {locations.map(location => (
+                        <option key={location} value={location}>
+                          {location}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Precio mínimo (€)
+                    </label>
+                    <input
+                      type="number"
+                      value={filters.min_price}
+                      onChange={(e) => handleFilterChange('min_price', e.target.value)}
+                      placeholder={`Desde ${currentPriceRange.min?.toLocaleString()}`}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Precio máximo (€)
+                    </label>
+                    <input
+                      type="number"
+                      value={filters.max_price}
+                      onChange={(e) => handleFilterChange('max_price', e.target.value)}
+                      placeholder={`Hasta ${currentPriceRange.max?.toLocaleString()}`}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div className="flex items-end">
+                    <button
+                      onClick={clearFilters}
+                      className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      Limpiar filtros
                     </button>
                   </div>
                 </div>
               </div>
+            )}
+          </div>
 
-              {/* Loading State */}
-              {loading ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="text-gray-500">Cargando propiedades...</div>
-                </div>
-              ) : (
-                <>
-                  {/* Properties Grid/List */}
-                  {filteredAndSortedProperties.length === 0 ? (
-                    <div className="text-center py-12">
-                      <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Search className="w-8 h-8 text-gray-400" />
-                      </div>
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                        No se encontraron propiedades
-                      </h3>
-                      <p className="text-gray-600 mb-4">
-                        Intenta ajustar los filtros para ver más resultados
-                      </p>
-                      <button
-                        onClick={resetFilters}
-                        className="btn-primary"
-                      >
-                        Limpiar filtros
-                      </button>
-                    </div>
-                  ) : (
-                    <motion.div
-                      key={viewMode}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.3 }}
-                      className={
-                        viewMode === 'grid'
-                          ? 'grid md:grid-cols-2 xl:grid-cols-3 gap-6'
-                          : 'space-y-6'
-                      }
-                    >
-                      {filteredAndSortedProperties.map((property, index) => (
-                        <motion.div
-                          key={property.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.3, delay: index * 0.1 }}
-                        >
-                          <PropertyCard {...property} />
-                        </motion.div>
-                      ))}
-                    </motion.div>
-                  )}
-                </>
-              )}
+          {/* Resultados */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between">
+              <p className="text-gray-600">
+                {isLoading ? 'Cargando...' : `${filteredAndSortedProperties.length} propiedades encontradas`}
+              </p>
             </div>
           </div>
+
+          {/* Lista de propiedades */}
+          {isLoading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
+              <p className="text-gray-500 mt-4">Cargando propiedades...</p>
+            </div>
+          ) : filteredAndSortedProperties.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Search className="w-8 h-8 text-gray-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                No se encontraron propiedades
+              </h3>
+              <p className="text-gray-600 mb-4">
+                Intenta ajustar los filtros de búsqueda para obtener más resultados.
+              </p>
+              <button
+                onClick={clearFilters}
+                className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-lg transition-colors"
+              >
+                Limpiar filtros
+              </button>
+            </div>
+          ) : (
+            <div className={
+              viewMode === 'grid' 
+                ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                : "space-y-6"
+            }>
+              {filteredAndSortedProperties.map((property) => (
+                <PropertyCard 
+                  key={property.id} 
+                  property={property} 
+                  viewMode={viewMode}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </>
